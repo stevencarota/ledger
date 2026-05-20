@@ -211,7 +211,7 @@ textarea:focus{outline:none;border-color:var(--border2)}
 </div>
 
 <!-- QUEUE -->
-<div id="page-queue" class="page">
+<div id="page-queue" class="page" style="overflow-y:auto">
   <div class="card">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.875rem">
       <div class="card-title" style="margin:0"><i class="ti ti-flag" style="color:var(--warning)"></i> Needs clarification</div>
@@ -296,7 +296,7 @@ function parseCSV(text,acct){
       if(isNaN(amtRaw))continue;
       // Scotia: Debit = money spent (negative), Credit = refund (positive)
       const amt=txType.toLowerCase()==='debit'?-Math.abs(amtRaw):Math.abs(amtRaw);
-      rows.push({date,rawDesc:(subdesc||desc).trim(),txType:txType,amount:amt,account:acct});
+      rows.push({date,rawDesc:(desc||subdesc).trim(),txType:txType,amount:amt,account:acct});
     }else if(isChq){
       const[,date,desc,subdesc,,amtStr]=cols;
       if(!date||!date.match(/\d{4}-\d{2}-\d{2}/))continue;
