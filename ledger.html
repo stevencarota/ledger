@@ -292,7 +292,7 @@ function parseCSV(text,acct){
       rows.push({date,rawDesc:(subdesc||desc).trim(),txType:desc.trim(),amount:amt,account:acct});
     }else{
       let date,desc,amt;
-      if(cols[0].match(/^\d{4}-\d{2}-\d{2}$/)){date=cols[0];desc=cols[1];amt=parseFloat((cols[cols.length-1]||'').replace(/[^-0-9.]/g,''));}
+      if(cols[0]===''&&cols[1]&&cols[1].match(/^\d{4}-\d{2}-\d{2}$/)){date=cols[1];desc=cols[2];amt=parseFloat((cols[cols.length-1]||,''));}
       else if(cols.length>=3){amt=parseFloat(cols[0].replace(/[^-0-9.]/g,''));date=cols[1];desc=cols[2];}
       if(!date||!desc||isNaN(amt))continue;
       rows.push({date,rawDesc:desc.trim(),txType:'pos purchase',amount:amt,account:acct});
