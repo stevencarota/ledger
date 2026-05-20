@@ -279,12 +279,25 @@ function lookupCat(name){
 }
 
 function parseCSV(text,acct){
-  const isChq=text.includes('Type of Transaction')||text.includes('Sub-description')||text.includes('Current statement period');
+  const isScotiaVisa=text.includes('Type of Transaction')&&text.includes('Sub-description');
+  const isChq=!isScotiaVisa&&(text.includes('Sub-description')||text.includes('Current statement period'));
   const rows=[];
   for(const line of text.trim().split('\n')){
     const cols=(line.match(/"([^"]*)"/g)||[]).map(c=>c.replace(/^"|"$/g,'').trim());
     if(cols.length<5)continue;
-    if(isChq){
+    if(isScotiaVisa){
+      // Format: filter/empty, date, description, sub-description, status, type, amount
+      const date=cols[1];
+      if(!date||!date.match(/\d{4}-\d{2}-\d{2}/))continue;
+      const desc=cols[2]||'';
+      const subdesc=cols[3]||'';
+      const txType=cols[5]||'';
+      const amtRaw=parseFloat((cols[6]||'').replace(/[^-0-9.]/g,''));
+      if(isNaN(amtRaw))continue;
+      // Scotia: Debit = money spent (negative), Credit = refund (positive)
+      const amt=txType.toLowerCase()==='debit'?-Math.abs(amtRaw):Math.abs(amtRaw);
+      rows.push({date,rawDesc:(subdesc||desc).trim(),txType:txType,amount:amt,account:acct});
+    }else if(isChq){
       const[,date,desc,subdesc,,amtStr]=cols;
       if(!date||!date.match(/\d{4}-\d{2}-\d{2}/))continue;
       const amt=parseFloat((amtStr||'').replace(/[^-0-9.]/g,''));
@@ -292,9 +305,7 @@ function parseCSV(text,acct){
       rows.push({date,rawDesc:(subdesc||desc).trim(),txType:desc.trim(),amount:amt,account:acct});
     }else{
       let date,desc,amt;
-      if(cols[0]===''&&cols[1]&&cols[1].match(/^\d{4}-\d{2}-\d{2}$/)){
-        date=cols[1];desc=cols[2];amt=parseFloat((cols[cols.length-1]||'').replace(/[^-0-9.]/g,''));
-      }else if(cols[0].match(/^\d{4}-\d{2}-\d{2}$/)){
+      if(cols[0].match(/^\d{4}-\d{2}-\d{2}$/)){
         date=cols[0];desc=cols[1];amt=parseFloat((cols[cols.length-1]||'').replace(/[^-0-9.]/g,''));
       }else if(cols.length>=3){
         amt=parseFloat(cols[0].replace(/[^-0-9.]/g,''));date=cols[1];desc=cols[2];
